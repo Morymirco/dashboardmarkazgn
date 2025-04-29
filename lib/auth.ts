@@ -180,7 +180,7 @@ export async function getCurrentUser() {
   }
 
   try {
-    let response = await fetch("https://api.markazgn.org/users/getuser/", {
+    let response = await fetch("https://api.markazgn.org/users/getuser/by-token/", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
