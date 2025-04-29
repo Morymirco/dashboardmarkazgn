@@ -42,11 +42,15 @@ export default function CentresPage() {
   }, [])
 
   // Filtrer les centres selon la recherche
+  // const filteredCentres = centres.filter(
+  //   (centre) =>
+  //     centre.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     centre.adresse.toLowerCase().includes(searchTerm.toLowerCase()),
+  // )
+
   const filteredCentres = centres.filter(
-    (centre) =>
-      centre.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      centre.adresse.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      (centre) => true,
+    )
 
   if (loading) {
     return (

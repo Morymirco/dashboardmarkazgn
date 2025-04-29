@@ -16,7 +16,6 @@ export default function NouveauCentrePage() {
           <h2 className="text-3xl font-bold tracking-tight">Créer un nouveau centre</h2>
         </div>
       </div>
-
       <CentreForm />
     </div>
   )

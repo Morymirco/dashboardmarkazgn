@@ -1,6 +1,6 @@
 import { getAccessToken } from "@/lib/auth"
 
-const API_URL = "https://api.markazgn.org"
+export const API_URL = "https://api.markazgn.org"
 
 export interface CentreImage {
   id: number
@@ -255,7 +255,7 @@ export async function getCentres() {
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/markaz/markaz/`, {
+    const response = await fetch(`${API_URL}/markaz/`, {
       headers,
     })
 
@@ -280,7 +280,7 @@ export async function getCentreById(id: number) {
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/markaz/markaz/${id}/`, {
+    const response = await fetch(`${API_URL}/markaz/${id}/`, {
       headers,
     })
 
@@ -305,7 +305,7 @@ export async function getCentreBySlug(slug: string) {
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/markaz/markaz/${slug}/`, {
+    const response = await fetch(`${API_URL}/markaz/${slug}/`, {
       headers,
     })
 
@@ -377,7 +377,7 @@ export async function createCentre(centreData: CentreCreateRequest) {
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/markaz/markaz/`, {
+    const response = await fetch(`${API_URL}/markaz/`, {
       method: "POST",
       headers,
       body: JSON.stringify(centreData),
@@ -409,7 +409,7 @@ export async function updateCentre(id: number, centreData: Partial<CentreCreateR
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/markaz/markaz/${id}/`, {
+    const response = await fetch(`${API_URL}/markaz/${id}/`, {
       method: "PATCH",
       headers,
       body: JSON.stringify(centreData),
@@ -439,7 +439,7 @@ export async function deleteCentre(id: number) {
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${API_URL}/markaz/markaz/${id}/`, {
+    const response = await fetch(`${API_URL}/markaz/${id}/`, {
       method: "DELETE",
       headers,
     })
