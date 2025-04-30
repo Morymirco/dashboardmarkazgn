@@ -12,9 +12,31 @@ import { getCentres, formatCentreFromApi } from "@/lib/services/centre-service"
 import type { Centre } from "@/types/centre"
 import { useRouter } from "next/navigation"
 
+// Mettre à jour le type Centre directement dans ce fichier
+type ExtendedCentre = Centre & {
+  presentation?: string | null;
+  creation?: string | null;
+  manager_full_name?: string | null;
+  manager_email?: string | null;
+  managers?: { name: string; role: string }[] | null;
+  total_inscrits?: number;
+  capacity?: number;
+  tarifs?: { mensuel: number; inscription: number } | null;
+  opening_days?: string[] | null;
+  certifications?: string[] | null;
+  is_agrement?: boolean;
+  collaboration?: string | null;
+  is_support?: boolean;
+  commentaire?: string | null;
+  student_types?: number[];
+  cours_graders?: number[];
+  languages?: number[];
+  // Ajoutez tous les autres champs manquants ici
+};
+
 export default function CentresPage() {
   const router = useRouter()
-  const [centres, setCentres] = useState<Centre[]>([])
+  const [centres, setCentres] = useState<ExtendedCentre[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -24,12 +46,19 @@ export default function CentresPage() {
       try {
         setLoading(true)
         const data = await getCentres()
+        console.log(data)
 
-        // Formater les données de l'API vers notre format interne
-        const formattedCentres = data.map(formatCentreFromApi)
-
-        setCentres(formattedCentres)
-        setError(null)
+        // Vérifier si data est défini et est un tableau
+        if (data && Array.isArray(data)) {
+          // Formater les données de l'API vers notre format interne
+          const formattedCentres = data.map(formatCentreFromApi) as unknown as ExtendedCentre[]
+          setCentres(formattedCentres)
+        } else {
+          console.error("Les données reçues ne sont pas un tableau:", data)
+          setError("Format de données incorrect. Veuillez contacter l'administrateur.")
+          setCentres([]) // Initialiser avec un tableau vide
+        }
+        
       } catch (err) {
         console.error("Erreur lors du chargement des centres:", err)
         setError("Impossible de charger les centres. Veuillez réessayer plus tard.")

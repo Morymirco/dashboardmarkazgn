@@ -6,112 +6,50 @@ export interface Information {
 
 export interface Centre {
   id: number
-  nom: string
+  nom: string | null
   slug: string
   adresse: string
   description: string
   images: string[]
   installations: string[]
-  informations: Information[]
-  // Nouveaux champs
-  contact?: {
-    email: string
-    phone: string
-    website: string
-    socialMedia: {
-      twitter: string | null
-      facebook: string
-      instagram: string
-    }
-  }
-  statistics?: {
-    students: number
-    teachers: number
-    classrooms: number
-    booksInLibrary: number
-    averageClassSize: number
-    graduatedStudents: number
-  }
-  facilities?: {
-    name: string
-    count: number
-    description: string
-  }[]
-  schedule?: {
-    sunday: string
-    ramadan: string
-    holidays: string
-    saturday: string
-    weekdays: string
-  }
-  admissionProcess?: {
-    steps: string[]
-    registrationFee: {
-      amount: number
-      oneTime: boolean
-      currency: string
-    }
-    requiredDocuments: string[]
-  }
-  fees?: {
-    amount: number
-    period: string
-    currency: string
-    programId: string
-    programName: string
-    scholarshipAvailable: boolean
-  }[]
-  achievements?: {
-    year: number
-    title: string
-    description: string
-  }[]
-  partnerships?: {
-    id: string
-    name: string
-    type: string
-    location: string
-    description: string
-  }[]
+  informations: { label: string; value: string }[]
+  contact: { fixe: string; mobile: string } | null
+  statistics?: any
+  facilities?: any
+  schedule?: any
+  admissionProcess?: any
+  fees?: any
+  achievements?: any
+  partnerships?: any
   tags?: string[]
   legalStatus?: string
   status?: string
   registrationNumber?: string
-  programs?: {
-    id: string
-    name: string
-    ageRange: string
-    duration: string
-    schedule: string
-    students: number
-    description: string
-  }[]
-  categories?: {
-    id: number
-    nom: string
-  }[]
-  cours?: {
-    id: number
-    nom: string
-  }[]
-  statuts?: {
-    id: number
-    nom: string
-  }[]
+  programs?: any
+  categories?: any
+  cours?: any
+  statuts?: any
   latitude?: number
   longitude?: number
-  user?: {
-    id: number
-    email: string
-    firstname: string
-    lastname: string
-    adresse: string
-    image: string | null
-    tel: string
-    role: string
-    is_accept_mail: boolean
-    articles: any[]
-  }
+  user?: any
+  // Nouveaux champs
+  presentation?: string | null
+  creation?: string | null
+  manager_full_name?: string | null
+  manager_email?: string | null
+  managers?: { name: string; role: string }[] | null
+  total_inscrits?: number
+  capacity?: number
+  tarifs?: { mensuel: number; inscription: number } | null
+  opening_days?: string[] | null
+  certifications?: string[] | null
+  is_agrement?: boolean
+  collaboration?: string | null
+  is_support?: boolean
+  commentaire?: string | null
+  student_types?: number[]
+  cours_graders?: number[]
+  languages?: number[]
 }
 
 export interface TabProps {

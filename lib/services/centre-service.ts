@@ -91,12 +91,12 @@ export interface CentreCategory {
 
 export interface CentreCours {
   id: number
-  nom: string
+  name: string
 }
 
 export interface CentreStatut {
   id: number
-  nom: string
+  name: string
 }
 
 export interface CentreUser {
@@ -114,39 +114,65 @@ export interface CentreUser {
 
 export interface CentreResponse {
   id: number
-  user: CentreUser
-  slug: string
-  installations: any | null
+  user: CentreUser | null
+  slug: string | null
+  installations: string[] | null
   statuts: CentreStatut[]
-  categories: CentreCategory[]
+  categories?: CentreCategory[]
   cours: CentreCours[]
-  nom: string
-  description: string | null
-  short_description: string | null
-  long_description: string | null
-  location: string | null
-  latitude: number
-  longitude: number
-  commune: string
-  programme: string | null
-  compte: string | null
-  autre: string | null
-  contact: CentreContact | null
-  statistics: CentreStatistics | null
-  facilities: CentreFacility[] | null
-  schedule: CentreSchedule | null
-  admissionProcess: CentreAdmissionProcess | null
-  fees: CentreFee[] | null
-  achievements: CentreAchievement[] | null
-  partnerships: CentrePartnership[] | null
-  tags: string[] | null
-  created_at: string
-  updated_at: string
-  legalStatus: string | null
-  status: string | null
-  registrationNumber: string | null
-  programs: CentreProgram[] | null
+  name: string | null
+  description?: string | null
+  short_description?: string | null
+  long_description?: string | null
+  location?: string | null
+  latitude?: number
+  longitude?: number
+  commune: string | null
+  programme?: string | null
+  compte?: string | null
+  autre?: string | null
+  contact: {
+    fixe: string
+    mobile: string
+  } | null
+  statistics?: CentreStatistics | null
+  facilities?: CentreFacility[] | null
+  schedule?: CentreSchedule | null
+  admissionProcess?: CentreAdmissionProcess | null
+  fees?: CentreFee[] | null
+  achievements?: CentreAchievement[] | null
+  partnerships?: CentrePartnership[] | null
+  tags?: string[] | null
+  created_at?: string
+  updated_at?: string
+  legalStatus?: string | null
+  status?: string | null
+  registrationNumber?: string | null
+  programs?: CentreProgram[] | null
   images: CentreImage[] | null
+  presentation: string | null
+  creation: string | null
+  manager_full_name: string | null
+  manager_email: string | null
+  managers: {
+    name: string
+    role: string
+  }[] | null
+  total_inscrits: number
+  capacity: number
+  tarifs: {
+    mensuel: number
+    inscription: number
+  } | null
+  opening_days: string[] | null
+  certifications: string[] | null
+  is_agrement: boolean
+  collaboration: string | null
+  is_support: boolean
+  commentaire: string | null
+  student_types: number[]
+  cours_graders: number[]
+  languages: number[]
 }
 
 export interface CentreListResponse {
@@ -258,13 +284,15 @@ export async function getCentres() {
     const response = await fetch(`${API_URL}/markaz/`, {
       headers,
     })
+    console.log(response)
 
     if (!response.ok) {
       throw new Error(`Erreur lors de la récupération des centres: ${response.status}`)
     }
 
     const data: CentreListResponse = await response.json()
-    return data.results
+    console.log("data", data)
+    return data
   } catch (error) {
     console.error("Erreur lors de la récupération des centres:", error)
     throw error
@@ -325,13 +353,13 @@ export async function getCentreBySlug(slug: string) {
 export function formatCentreFromApi(centre: CentreResponse) {
   return {
     id: centre.id,
-    nom: centre.nom,
+    nom: centre.name,
     slug: centre.slug || `centre-${centre.id}`,
     adresse: centre.location || centre.commune || "Adresse non spécifiée",
     description:
-      centre.long_description || centre.short_description || centre.description || "Aucune description disponible",
+      centre.long_description || centre.short_description || centre.description || centre.presentation || "Aucune description disponible",
     images: centre.images ? centre.images.map((img) => img.image) : ["/placeholder.svg"],
-    installations: centre.facilities ? centre.facilities.map((facility) => facility.name) : [],
+    installations: centre.installations || [],
     informations: [
       ...(centre.statistics
         ? [
@@ -340,10 +368,11 @@ export function formatCentreFromApi(centre: CentreResponse) {
           ]
         : []),
       ...(centre.programs ? [{ label: "Programmes", value: centre.programs.length.toString() }] : []),
-      ...(centre.contact?.phone ? [{ label: "Contact", value: centre.contact.phone }] : []),
+      ...(centre.contact?.mobile ? [{ label: "Contact", value: centre.contact.mobile }] : []),
       ...(centre.status ? [{ label: "Statut", value: centre.status }] : []),
+      ...(centre.total_inscrits ? [{ label: "Inscrits", value: centre.total_inscrits.toString() }] : []),
+      ...(centre.capacity ? [{ label: "Capacité", value: centre.capacity.toString() }] : []),
     ],
-    // Ajout des nouveaux champs
     contact: centre.contact,
     statistics: centre.statistics,
     facilities: centre.facilities,
@@ -363,6 +392,23 @@ export function formatCentreFromApi(centre: CentreResponse) {
     latitude: centre.latitude,
     longitude: centre.longitude,
     user: centre.user,
+    presentation: centre.presentation,
+    creation: centre.creation,
+    manager_full_name: centre.manager_full_name,
+    manager_email: centre.manager_email,
+    managers: centre.managers,
+    total_inscrits: centre.total_inscrits,
+    capacity: centre.capacity,
+    tarifs: centre.tarifs,
+    opening_days: centre.opening_days,
+    certifications: centre.certifications,
+    is_agrement: centre.is_agrement,
+    collaboration: centre.collaboration,
+    is_support: centre.is_support,
+    commentaire: centre.commentaire,
+    student_types: centre.student_types,
+    cours_graders: centre.cours_graders,
+    languages: centre.languages,
   }
 }
 
