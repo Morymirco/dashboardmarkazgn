@@ -149,7 +149,7 @@ export default function CentresPage() {
           {filteredCentres.map((centre) => (
             <Card key={centre.id} className="overflow-hidden">
               <div className="aspect-video relative">
-                <Image src={centre.images[0] || "/placeholder.svg"} alt={centre.nom} fill className="object-cover" />
+                <Image src={centre.images[0] || "/placeholder.svg"} alt={centre.nom || ""} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
                   <div className="p-4 text-white">
                     <h3 className="text-xl font-bold">{centre.nom}</h3>
