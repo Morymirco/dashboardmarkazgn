@@ -18,6 +18,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import {createCentre, updateCentre, getCentreById, API_URL} from "@/lib/services/centre-service"
 import { generateRandomCentre, getRandomUnsplashImage } from "@/lib/utils/centre-generator"
 import {getAccessToken} from "@/lib/auth";
+// Générer des données aléatoires
+import { faker } from '@faker-js/faker/locale/fr';
 
 interface Installation {
   nom: string
@@ -32,6 +34,63 @@ interface CentreFormProps {
   centreId?: number
   initialData?: any
 }
+
+
+interface RandomUser {
+  email: string;
+  password: string;
+  firstname: string;
+  lastname: string;
+  adresse: string;
+  tel: string;
+  role: string;
+  is_accept_mail: boolean;
+}
+
+interface RandomCentre {
+  name: string;
+  slug: string;
+  presentation: string;
+  adresse: string;
+  tel: string;
+  email: string;
+  website: string;
+  creation: string;
+  commune: string;
+  manager_full_name: string;
+  manager_email: string;
+  total_inscrits: number;
+  capacity: number;
+  is_agrement: boolean;
+  is_support: boolean;
+  commentaire: string;
+  collaboration: string;
+  contact: {
+    fixe: string;
+    mobile: string;
+  };
+  managers: Array<{
+    name: string;
+    role: string;
+  }>;
+  tarifs: Array<{
+    periode: string;
+    niveau: string;
+    inscription: number;
+    mensuel: number;
+  }>;
+  opening_days: string[];
+  installations: Array<{
+    nom: string;
+  }>;
+  certifications: string[];
+  statuts: number[];
+  cours: number[];
+  student_types: number[];
+  cours_graders: number[];
+  languages: number[];
+}
+
 
 export default function CentreForm({ centreId, initialData }: CentreFormProps) {
   const router = useRouter()
@@ -80,7 +139,12 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
   const [managers, setManagers] = useState<Manager[]>(initialData?.managers || [])
 
   // Tarifs
-  const [tarifs, setTarifs] = useState(initialData?.tarifs || { inscription: 0, mensuel: 0 })
+  const [tarifs, setTarifs] = useState<Array<{
+    periode: string
+    niveau: string
+    inscription: number
+    mensuel: number
+  }>>(initialData?.tarifs || [])
 
   // Arrays
   const [openingDays, setOpeningDays] = useState<string[]>(initialData?.opening_days || [])
@@ -115,7 +179,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
           // Markaz
           setName(centreData.name || "")
           setSlug(centreData.slug || "")
-          setDescription(centreData.description || "")
+          setDescription("")
           setAdresse(centreData.adresse || "")
           setTel(centreData.tel || "")
           setEmail(centreData.email || "")
@@ -251,76 +315,145 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
     setCertifications((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // Générer des données aléatoires
+// ... (autres imports)
+
   const generateRandomCentreData = () => {
-    // Générer des données aléatoires pour simuler un centre
-    const randomCentre = generateRandomCentre(userId);
-  
-    // Mettre à jour les états du formulaire avec les données générées
-    setUserEmail(randomCentre.email || "manager@markaz.com");
-    setPassword(randomCentre.password || "password123");
-    setFirstname(randomCentre.firstname || "John");
-    setLastname(randomCentre.lastname || "Doe");
-    setUserAdresse(randomCentre.adresse || "123 Main St");
-    setUserTel(randomCentre.tel || "+123456789");
-    setUserRole(randomCentre.role || "manager");
-    setIsAcceptMail(randomCentre.is_accept_mail ?? true);
-  
-    setName(randomCentre.name || "Markaz Al Quran");
-    setSlug(randomCentre.slug || "Centre-enseignement-du-Coran");
-    setDescription(randomCentre.presentation || "Une école moderne du Coran");
-    setAdresse(randomCentre.adresse || "123 Main St");
-    setTel(randomCentre.tel || "+22390909090");
-    setEmail(randomCentre.email || "contact@markaz.com");
-    setWebsite(randomCentre.website || "https://markaz.com");
-    setPresentation(randomCentre.presentation || "Une école moderne du Coran");
-    setCreation(randomCentre.creation || "2023-09-01T00:00:00Z");
-    setCommune(randomCentre.commune || "Commune VI");
-    setManagerFullName(randomCentre.manager_full_name || "Ali Youcef");
-    setManagerEmail(randomCentre.manager_email || "ali@markaz.com");
-    setTotalInscrits(randomCentre.total_inscrits || 45);
-    setCapacity(randomCentre.capacity || 100);
-    setIsAgrement(randomCentre.is_agrement ?? true);
-    setIsSupport(randomCentre.is_support ?? false);
-    setCommentaire(randomCentre.commentaire || "Très bonne organisation");
-    setCollaboration(randomCentre.collaboration || "Avec plusieurs ONG");
-  
-    setContactFixe(randomCentre.contact?.fixe || "+22320202020");
-    setContactMobile(randomCentre.contact?.mobile || "+22390909090");
-  
-    setManagers(
-      randomCentre.managers || [
-        { name: " Ali", role: "admin" },
-        { name: "Fatou", role: "coordinator" },
-      ]
+    // Générer des données aléatoires pour l'utilisateur
+    const randomUser: RandomUser = {
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+      firstname: faker.person.firstName(),
+      lastname: faker.person.lastName(),
+      adresse: faker.location.streetAddress(),
+      tel: faker.phone.number(),
+      role: "manager",
+      is_accept_mail: faker.datatype.boolean(),
+    };
+
+    // Générer des données aléatoires pour le centre
+    const randomCentre: RandomCentre = {
+      name: `Markaz ${faker.company.name()}`,
+      slug: faker.helpers.slugify(faker.company.name()).toLowerCase(),
+      presentation: faker.lorem.paragraphs(2),
+      adresse: faker.location.streetAddress(),
+      tel: faker.phone.number(),
+      email: faker.internet.email(),
+      website: faker.internet.url(),
+      creation: faker.date.past().toISOString(),
+      commune: faker.location.city(),
+      manager_full_name: faker.person.fullName(),
+      manager_email: faker.internet.email(),
+      total_inscrits: faker.number.int({ min: 10, max: 200 }),
+      capacity: faker.number.int({ min: 50, max: 300 }),
+      is_agrement: faker.datatype.boolean(),
+      is_support: faker.datatype.boolean(),
+      commentaire: faker.lorem.sentence(),
+      collaboration: faker.company.name(),
+      contact: {
+        fixe: faker.phone.number(),
+        mobile: faker.phone.number(),
+      },
+      managers: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => ({
+        name: faker.person.fullName(),
+        role: faker.helpers.arrayElement(['Professeur', 'Assistant', 'Directeur pédagogique']),
+      })),
+      tarifs: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => ({
+        periode: `${faker.number.int({ min: 8, max: 10 })}h-${faker.number.int({ min: 12, max: 18 })}h`,
+        niveau: faker.helpers.arrayElement(['Débutant', 'Intermédiaire', 'Avancé', 'Expert']),
+        inscription: faker.number.int({ min: 5000, max: 20000 }),
+        mensuel: faker.number.int({ min: 10000, max: 50000 }),
+      })),
+      opening_days: faker.helpers.arrayElements(
+          ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
+          { min: 3, max: 6 }
+      ),
+      installations: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
+        nom: faker.helpers.arrayElement([
+          'Salle de classe',
+          'Bibliothèque',
+          'Salle de prière',
+          'Cour de récréation',
+          'Laboratoire',
+          'Salle informatique'
+        ])
+      })),
+      certifications: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () =>
+          faker.helpers.arrayElement([
+            'Agrément Éducation Nationale',
+            'Certification ISO',
+            'Label Qualité',
+            'Agrément Ministériel'
+          ])
+      ),
+      statuts: faker.helpers.arrayElements(
+          relationship?.statuts?.map((s: { id: number }) => s.id) || [],
+          { min: 1, max: 3 }
+      ),
+      cours: faker.helpers.arrayElements(
+          relationship?.cours?.map((c: { id: number }) => c.id) || [],
+          { min: 1, max: 3 }
+      ),
+      student_types: faker.helpers.arrayElements(
+          relationship?.student_types?.map((st: { id: number }) => st.id) || [],
+          { min: 1, max: 2 }
+      ),
+      cours_graders: faker.helpers.arrayElements(
+          relationship?.cours_graders?.map((cg: { id: number }) => cg.id) || [],
+          { min: 1, max: 3 }
+      ),
+      languages: faker.helpers.arrayElements(
+          relationship?.languages?.map((l: { id: number }) => l.id) || [],
+          { min: 1, max: 2 }
+      ),
+    };
+
+    // Mettre à jour les états avec les données générées
+    setUserEmail(randomUser.email);
+    setPassword(randomUser.password);
+    setFirstname(randomUser.firstname);
+    setLastname(randomUser.lastname);
+    setUserAdresse(randomUser.adresse);
+    setUserTel(randomUser.tel);
+    setUserRole(randomUser.role);
+    setIsAcceptMail(randomUser.is_accept_mail);
+
+    setName(randomCentre.name);
+    setSlug(randomCentre.slug);
+    setDescription(randomCentre.presentation);
+    setAdresse(randomCentre.adresse);
+    setTel(randomCentre.tel);
+    setEmail(randomCentre.email);
+    setWebsite(randomCentre.website);
+    setPresentation(randomCentre.presentation);
+    setCreation(randomCentre.creation);
+    setCommune(randomCentre.commune);
+    setManagerFullName(randomCentre.manager_full_name);
+    setManagerEmail(randomCentre.manager_email);
+    setTotalInscrits(randomCentre.total_inscrits);
+    setCapacity(randomCentre.capacity);
+    setIsAgrement(randomCentre.is_agrement);
+    setIsSupport(randomCentre.is_support);
+    setCommentaire(randomCentre.commentaire);
+    setCollaboration(randomCentre.collaboration);
+
+    setContactFixe(randomCentre.contact.fixe);
+    setContactMobile(randomCentre.contact.mobile);
+
+    setManagers(randomCentre.managers);
+    setTarifs(randomCentre.tarifs);
+    setOpeningDays(randomCentre.opening_days);
+    setInstallations(randomCentre.installations);
+    setCertifications(randomCentre.certifications);
+    setStatuts(randomCentre.statuts);
+    setCours(randomCentre.cours);
+    setStudentTypes(randomCentre.student_types);
+    setCoursGraders(randomCentre.cours_graders);
+    setLanguages(randomCentre.languages);
+
+    // Générer des images aléatoires
+    const newImagePreviews = Array.from({ length: 3 }, () =>
+        faker.image.urlLoremFlickr({ category: 'school' })
     );
-  
-    setTarifs(
-      randomCentre.tarifs || {
-        inscription: 10000,
-        mensuel: 15000,
-      }
-    );
-  
-    setOpeningDays(randomCentre.opening_days || ["Lundi", "Mercredi", "Samedi"]);
-    setInstallations(
-      randomCentre.installations?.map((inst: string) => ({ nom: inst })) || [
-        { nom: "Salle de classe" },
-        { nom: "Bibliothèque" },
-      ]
-    );
-    setCertifications(randomCentre.certifications || ["Agrément A", "Label B"]);
-    setStatuts(randomCentre.statuts || [1, 2]);
-    setCours(randomCentre.cours || [1, 3]);
-    setStudentTypes(randomCentre.student_types || [1]);
-    setCoursGraders(randomCentre.cours_graders || [1, 2]);
-    setLanguages(randomCentre.languages || [1]);
-  
-    // Gérer les images
-    const newImagePreviews = [];
-    for (let i = 0; i < 3; i++) {
-      newImagePreviews.push(getRandomUnsplashImage());
-    }
     imagesPreviews.forEach((url) => URL.revokeObjectURL(url));
     setImagesPreviews(newImagePreviews);
     setImages([]);
@@ -361,10 +494,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
         })),
         total_inscrits: totalInscrits,
         capacity,
-        tarifs: {
-          inscription: tarifs.inscription,
-          mensuel: tarifs.mensuel,
-        },
+        tarifs: tarifs,
         opening_days: openingDays,
         installations: installations.map((inst) => inst.nom),
         certifications,
@@ -628,17 +758,6 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description du Markaz"
-                rows={4}
-                required
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="adresse">Adresse</Label>
               <Input
                 id="adresse"
@@ -713,7 +832,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
                 id="managerFullName"
                 value={managerFullName}
                 onChange={(e) => setManagerFullName(e.target.value)}
-                placeholder="Nom complet du manager"
+                placeholder="Nom complet du responsable"
               />
             </div>
             <div className="space-y-2">
@@ -723,7 +842,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
                 type="email"
                 value={managerEmail}
                 onChange={(e) => setManagerEmail(e.target.value)}
-                placeholder="Email du manager"
+                placeholder="Email du responsable"
               />
             </div>
             <div className="space-y-2">
@@ -762,7 +881,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
               />
               <Label htmlFor="isSupport">Support</Label>
             </div>
-            <div className="space-y-2">
+            {/*<div className="space-y-2">
               <Label htmlFor="commentaire">Commentaire</Label>
               <Textarea
                 id="commentaire"
@@ -771,7 +890,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
                 placeholder="Commentaires"
                 rows={4}
               />
-            </div>
+            </div>*/}
             <div className="space-y-2">
               <Label htmlFor="collaboration">Collaboration</Label>
               <Textarea
@@ -791,7 +910,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
             <CardTitle>Contact</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
+            {/*<div className="space-y-2">
               <Label htmlFor="contactFixe">Téléphone fixe</Label>
               <Input
                 id="contactFixe"
@@ -799,7 +918,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
                 onChange={(e) => setContactFixe(e.target.value)}
                 placeholder="Numéro de téléphone fixe"
               />
-            </div>
+            </div>*/}
             <div className="space-y-2">
               <Label htmlFor="contactMobile">Téléphone mobile</Label>
               <Input
@@ -856,25 +975,90 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
             <CardTitle>Tarifs</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tarifInscription">Frais d'inscription</Label>
-              <Input
-                id="tarifInscription"
-                type="number"
-                value={tarifs.inscription}
-                onChange={(e) => setTarifs({ ...tarifs, inscription: Number(e.target.value) })}
-                placeholder="Frais d'inscription"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tarifMensuel">Frais mensuels</Label>
-              <Input
-                id="tarifMensuel"
-                type="number"
-                value={tarifs.mensuel}
-                onChange={(e) => setTarifs({ ...tarifs, mensuel: Number(e.target.value) })}
-                placeholder="Frais mensuels"
-              />
+            <div className="space-y-4">
+              {tarifs.map((tarif, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                    <div className="space-y-2">
+                      <Label>Période (ex: 15h-18h)</Label>
+                      <Input
+                          value={tarif.periode}
+                          onChange={(e) => {
+                            const newTarifs = [...tarifs]
+                            newTarifs[index].periode = e.target.value
+                            setTarifs(newTarifs)
+                          }}
+                          placeholder="15h-18h"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Niveau</Label>
+                      <Input
+                          value={tarif.niveau}
+                          onChange={(e) => {
+                            const newTarifs = [...tarifs]
+                            newTarifs[index].niveau = e.target.value
+                            setTarifs(newTarifs)
+                          }}
+                          placeholder="Débutant, Intermédiaire..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Frais d'inscription</Label>
+                      <Input
+                          type="number"
+                          value={tarif.inscription}
+                          onChange={(e) => {
+                            const newTarifs = [...tarifs]
+                            newTarifs[index].inscription = Number(e.target.value)
+                            setTarifs(newTarifs)
+                          }}
+                          placeholder="Montant"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Mensualité</Label>
+                      <Input
+                          type="number"
+                          value={tarif.mensuel}
+                          onChange={(e) => {
+                            const newTarifs = [...tarifs]
+                            newTarifs[index].mensuel = Number(e.target.value)
+                            setTarifs(newTarifs)
+                          }}
+                          placeholder="Montant"
+                      />
+                    </div>
+                    <div className="flex items-end justify-end md:col-span-4">
+                      <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newTarifs = [...tarifs]
+                            newTarifs.splice(index, 1)
+                            setTarifs(newTarifs)
+                          }}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+              ))}
+              <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setTarifs([...tarifs, {
+                      periode: "",
+                      niveau: "",
+                      inscription: 0,
+                      mensuel: 0
+                    }])
+                  }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Ajouter un tarif
+              </Button>
             </div>
           </CardContent>
         </Card>
