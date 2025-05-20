@@ -1,25 +1,23 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Upload, X, Loader2, Plus, Trash, RefreshCw } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertCircle, CheckCircle, Loader2, Plus, RefreshCw, Trash, Upload, X } from "lucide-react"
 import Image from "next/image"
-import { AlertCircle, CheckCircle } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useRouter } from "next/navigation"
+import type React from "react"
+import { useEffect, useState } from "react"
 
 // Fonctions utilitaires (à adapter selon votre implémentation)
-import {createCentre, updateCentre, getCentreById, API_URL} from "@/lib/services/centre-service"
-import { generateRandomCentre, getRandomUnsplashImage } from "@/lib/utils/centre-generator"
-import {getAccessToken} from "@/lib/auth";
+import { getAccessToken } from "@/lib/auth"
+import { API_URL, getCentreById } from "@/lib/services/centre-service"
 // Générer des données aléatoires
-import { faker } from '@faker-js/faker/locale/fr';
+import { faker } from '@faker-js/faker/locale/fr'
 
 interface Installation {
   nom: string
@@ -91,6 +89,19 @@ interface RandomCentre {
   languages: number[];
 }
 
+// Ajout d'un type pour les statuts d'inscription
+interface TarifStatus {
+  id: string;
+  name: string;
+}
+
+// Modification de l'interface Tarif
+interface Tarif {
+  status: string;
+  horaires: string[];
+  inscription: number;
+  mensuel: number;
+}
 
 export default function CentreForm({ centreId, initialData }: CentreFormProps) {
   const router = useRouter()
@@ -138,13 +149,22 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
   // Managers
   const [managers, setManagers] = useState<Manager[]>(initialData?.managers || [])
 
-  // Tarifs
-  const [tarifs, setTarifs] = useState<Array<{
-    periode: string
-    niveau: string
-    inscription: number
-    mensuel: number
-  }>>(initialData?.tarifs || [])
+  // Définition des statuts d'inscription disponibles
+  const tarifStatuses: TarifStatus[] = [
+    { id: "internat", name: "Internat" },
+    { id: "semi-internat", name: "Semi-internat" },
+    { id: "externat", name: "Externat" }
+  ];
+  
+  // Modification de l'état des tarifs pour inclure les horaires multiples
+  const [tarifs, setTarifs] = useState<Tarif[]>(
+    initialData?.tarifs?.map((t: any) => ({
+      status: t.niveau || "externat",
+      horaires: t.periode ? [t.periode] : [],
+      inscription: t.inscription || 0,
+      mensuel: t.mensuel || 0
+    })) || []
+  );
 
   // Arrays
   const [openingDays, setOpeningDays] = useState<string[]>(initialData?.opening_days || [])
@@ -204,7 +224,12 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
           setManagers(centreData.managers || [])
 
           // Tarifs
-          setTarifs(centreData.tarifs || { inscription: 0, mensuel: 0 })
+          setTarifs(centreData.tarifs?.map((t: any) => ({
+            status: t.niveau || "externat",
+            horaires: t.periode ? [t.periode] : [],
+            inscription: t.inscription || 0,
+            mensuel: t.mensuel || 0
+          })) || [])
 
           // Arrays
           setOpeningDays(centreData.opening_days || [])
@@ -315,7 +340,26 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
     setCertifications((prev) => prev.filter((_, i) => i !== index))
   }
 
-// ... (autres imports)
+  // Fonction pour ajouter un horaire à un tarif
+  const addHoraire = (tarifIndex: number) => {
+    const newTarifs = [...tarifs];
+    newTarifs[tarifIndex].horaires.push("");
+    setTarifs(newTarifs);
+  };
+  
+  // Fonction pour mettre à jour un horaire
+  const updateHoraire = (tarifIndex: number, horaireIndex: number, value: string) => {
+    const newTarifs = [...tarifs];
+    newTarifs[tarifIndex].horaires[horaireIndex] = value;
+    setTarifs(newTarifs);
+  };
+  
+  // Fonction pour supprimer un horaire
+  const removeHoraire = (tarifIndex: number, horaireIndex: number) => {
+    const newTarifs = [...tarifs];
+    newTarifs[tarifIndex].horaires.splice(horaireIndex, 1);
+    setTarifs(newTarifs);
+  };
 
   const generateRandomCentreData = () => {
     // Générer des données aléatoires pour l'utilisateur
@@ -324,65 +368,86 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
       password: faker.internet.password(),
       firstname: faker.person.firstName(),
       lastname: faker.person.lastName(),
-      adresse: faker.location.streetAddress(),
-      tel: faker.phone.number(),
+      adresse: faker.location.streetAddress() + ", Conakry",
+      tel: "+224 " + faker.string.numeric(8),
       role: "manager",
       is_accept_mail: faker.datatype.boolean(),
     };
 
+    // Liste des quartiers de Conakry
+    const quartiersConakry = [
+      "Kaloum", "Dixinn", "Ratoma", "Matam", "Matoto", 
+      "Lambandji", "Sonfonia", "Kipé", "Nongo", "Lansanaya",
+      "Hamdallaye", "Bambéto", "Cosa", "Wanindara", "Dabompa"
+    ];
+    
+    // Liste des noms typiques guinéens pour les centres
+    const prefixesMarkaz = [
+      "Centre Islamique", "Institut", "École Coranique", "Markaz", "Madrassa",
+      "Centre Éducatif", "Fondation", "Académie", "École", "Centre d'Apprentissage"
+    ];
+    
+    const suffixesMarkaz = [
+      "Al-Firdaws", "Al-Falah", "Al-Nour", "Al-Houda", "Al-Iman",
+      "Al-Ihsane", "Al-Baraka", "Al-Rahma", "Al-Salam", "Al-Taqwa"
+    ];
+
+    // Générer un nom de centre aléatoire
+    const markazName = `${faker.helpers.arrayElement(prefixesMarkaz)} ${faker.helpers.arrayElement(suffixesMarkaz)}`;
+    
+    // Statuts disponibles pour les tarifs (utiliser ceux définis dans l'interface)
+    const statutsDisponibles = ["internat", "semi-internat", "externat"];
+
     // Générer des données aléatoires pour le centre
     const randomCentre: RandomCentre = {
-      name: `Markaz ${faker.company.name()}`,
-      slug: faker.helpers.slugify(faker.company.name()).toLowerCase(),
-      presentation: faker.lorem.paragraphs(2),
-      adresse: faker.location.streetAddress(),
-      tel: faker.phone.number(),
+      name: markazName,
+      slug: faker.helpers.slugify(markazName).toLowerCase(),
+      presentation: "Notre centre se consacre à l'enseignement du Coran et des sciences islamiques dans un environnement propice à l'apprentissage. Nous offrons un programme complet adapté à tous les niveaux.",
+      adresse: faker.location.streetAddress() + ", " + faker.helpers.arrayElement(quartiersConakry) + ", Conakry",
+      tel: "+224 " + faker.string.numeric(8),
       email: faker.internet.email(),
       website: faker.internet.url(),
       creation: faker.date.past().toISOString(),
-      commune: faker.location.city(),
+      commune: faker.helpers.arrayElement(quartiersConakry),
       manager_full_name: faker.person.fullName(),
       manager_email: faker.internet.email(),
-      total_inscrits: faker.number.int({ min: 10, max: 200 }),
-      capacity: faker.number.int({ min: 50, max: 300 }),
+      total_inscrits: faker.number.int({ min: 50, max: 300 }),
+      capacity: faker.number.int({ min: 100, max: 500 }),
       is_agrement: faker.datatype.boolean(),
       is_support: faker.datatype.boolean(),
-      commentaire: faker.lorem.sentence(),
-      collaboration: faker.company.name(),
+      commentaire: "Notre centre accueille des élèves de tous âges et propose des cours adaptés à chaque niveau.",
+      collaboration: "Ministère de l'Éducation Nationale de Guinée",
       contact: {
-        fixe: faker.phone.number(),
-        mobile: faker.phone.number(),
+        fixe: "+224 " + faker.string.numeric(8),
+        mobile: "+224 " + faker.string.numeric(8),
       },
-      managers: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => ({
+      managers: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
         name: faker.person.fullName(),
-        role: faker.helpers.arrayElement(['Professeur', 'Assistant', 'Directeur pédagogique']),
+        role: faker.helpers.arrayElement(['Professeur de Coran', 'Enseignant en langue arabe', 'Directeur pédagogique', 'Imam', 'Enseignant en fiqh']),
       })),
-      tarifs: Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, () => ({
+      tarifs: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () => ({
         periode: `${faker.number.int({ min: 8, max: 10 })}h-${faker.number.int({ min: 12, max: 18 })}h`,
-        niveau: faker.helpers.arrayElement(['Débutant', 'Intermédiaire', 'Avancé', 'Expert']),
-        inscription: faker.number.int({ min: 5000, max: 20000 }),
-        mensuel: faker.number.int({ min: 10000, max: 50000 }),
+        niveau: faker.helpers.arrayElement(statutsDisponibles),
+        inscription: faker.number.int({ min: 500000, max: 2000000 }),
+        mensuel: faker.number.int({ min: 100000, max: 500000 }),
       })),
       opening_days: faker.helpers.arrayElements(
           ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'],
-          { min: 3, max: 6 }
+          { min: 5, max: 7 }
       ),
       installations: Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
         nom: faker.helpers.arrayElement([
-          'Salle de classe',
-          'Bibliothèque',
-          'Salle de prière',
-          'Cour de récréation',
-          'Laboratoire',
-          'Salle informatique'
+          'Salle de classe', 'Bibliothèque islamique', 'Salle de prière',
+          'Cour de récréation', 'Laboratoire de langues', 'Salle informatique',
+          'Réfectoire', 'Dortoir', 'Mosquée'
         ])
       })),
       certifications: Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, () =>
           faker.helpers.arrayElement([
-            'Agrément Éducation Nationale',
-            'Certification ISO',
-            'Label Qualité',
-            'Agrément Ministériel'
+            'Agrément du Ministère de l\'Éducation Nationale',
+            'Certification du Secrétariat aux Affaires Religieuses',
+            'Label Qualité Éducative',
+            'Agrément du Ministère des Affaires Islamiques'
           ])
       ),
       statuts: faker.helpers.arrayElements(
@@ -440,7 +505,15 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
     setContactMobile(randomCentre.contact.mobile);
 
     setManagers(randomCentre.managers);
-    setTarifs(randomCentre.tarifs);
+    
+    // Correction ici pour s'assurer que les tarifs utilisent les bons statuts
+    setTarifs(randomCentre.tarifs.map((t: any) => ({
+      status: t.niveau, // Utiliser la valeur du niveau qui est maintenant un des statuts valides
+      horaires: t.periode ? [t.periode] : [],
+      inscription: t.inscription || 0,
+      mensuel: t.mensuel || 0
+    })));
+    
     setOpeningDays(randomCentre.opening_days);
     setInstallations(randomCentre.installations);
     setCertifications(randomCentre.certifications);
@@ -452,7 +525,7 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
 
     // Générer des images aléatoires
     const newImagePreviews = Array.from({ length: 3 }, () =>
-        faker.image.urlLoremFlickr({ category: 'school' })
+        faker.image.urlLoremFlickr({ category: 'mosque' })
     );
     imagesPreviews.forEach((url) => URL.revokeObjectURL(url));
     setImagesPreviews(newImagePreviews);
@@ -494,7 +567,12 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
         })),
         total_inscrits: totalInscrits,
         capacity,
-        tarifs: tarifs,
+        tarifs: tarifs.map((t) => ({
+          status: t.status,
+          horaires: t.horaires,
+          inscription: t.inscription,
+          mensuel: t.mensuel
+        })),
         opening_days: openingDays,
         installations: installations.map((inst) => inst.nom),
         certifications,
@@ -977,84 +1055,122 @@ export default function CentreForm({ centreId, initialData }: CentreFormProps) {
           <CardContent className="space-y-4">
             <div className="space-y-4">
               {tarifs.map((tarif, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                <div key={index} className="p-4 border rounded-lg space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label>Période (ex: 15h-18h)</Label>
-                      <Input
-                          value={tarif.periode}
-                          onChange={(e) => {
-                            const newTarifs = [...tarifs]
-                            newTarifs[index].periode = e.target.value
-                            setTarifs(newTarifs)
-                          }}
-                          placeholder="15h-18h"
-                      />
+                      <Label>Statut</Label>
+                      <select 
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={tarif.status}
+                        onChange={(e) => {
+                          const newTarifs = [...tarifs];
+                          newTarifs[index].status = e.target.value;
+                          setTarifs(newTarifs);
+                        }}
+                      >
+                        {tarifStatuses.map((status) => (
+                          <option key={status.id} value={status.id}>
+                            {status.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Niveau</Label>
-                      <Input
-                          value={tarif.niveau}
-                          onChange={(e) => {
-                            const newTarifs = [...tarifs]
-                            newTarifs[index].niveau = e.target.value
-                            setTarifs(newTarifs)
-                          }}
-                          placeholder="Débutant, Intermédiaire..."
-                      />
-                    </div>
+                    
                     <div className="space-y-2">
                       <Label>Frais d'inscription</Label>
                       <Input
-                          type="number"
-                          value={tarif.inscription}
-                          onChange={(e) => {
-                            const newTarifs = [...tarifs]
-                            newTarifs[index].inscription = Number(e.target.value)
-                            setTarifs(newTarifs)
-                          }}
-                          placeholder="Montant"
+                        type="number"
+                        value={tarif.inscription}
+                        onChange={(e) => {
+                          const newTarifs = [...tarifs];
+                          newTarifs[index].inscription = Number(e.target.value);
+                          setTarifs(newTarifs);
+                        }}
+                        placeholder="Montant"
                       />
                     </div>
+                    
                     <div className="space-y-2">
                       <Label>Mensualité</Label>
                       <Input
-                          type="number"
-                          value={tarif.mensuel}
-                          onChange={(e) => {
-                            const newTarifs = [...tarifs]
-                            newTarifs[index].mensuel = Number(e.target.value)
-                            setTarifs(newTarifs)
-                          }}
-                          placeholder="Montant"
+                        type="number"
+                        value={tarif.mensuel}
+                        onChange={(e) => {
+                          const newTarifs = [...tarifs];
+                          newTarifs[index].mensuel = Number(e.target.value);
+                          setTarifs(newTarifs);
+                        }}
+                        placeholder="Montant"
                       />
                     </div>
-                    <div className="flex items-end justify-end md:col-span-4">
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Horaires</Label>
                       <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const newTarifs = [...tarifs]
-                            newTarifs.splice(index, 1)
-                            setTarifs(newTarifs)
-                          }}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addHoraire(index)}
                       >
-                        <Trash className="h-4 w-4" />
+                        <Plus className="h-4 w-4 mr-1" /> Ajouter un horaire
                       </Button>
                     </div>
+                    
+                    {tarif.horaires.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Aucun horaire défini</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {tarif.horaires.map((horaire, horaireIndex) => (
+                          <div key={horaireIndex} className="flex items-center gap-2">
+                            <Input
+                              value={horaire}
+                              onChange={(e) => updateHoraire(index, horaireIndex, e.target.value)}
+                              placeholder="ex: 8h-12h"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeHoraire(index, horaireIndex)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                  
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newTarifs = [...tarifs];
+                        newTarifs.splice(index, 1);
+                        setTarifs(newTarifs);
+                      }}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               ))}
+              
               <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setTarifs([...tarifs, {
-                      periode: "",
-                      niveau: "",
-                      inscription: 0,
-                      mensuel: 0
-                    }])
-                  }}
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setTarifs([...tarifs, {
+                    status: "externat",
+                    horaires: [],
+                    inscription: 0,
+                    mensuel: 0
+                  }]);
+                }}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Ajouter un tarif
